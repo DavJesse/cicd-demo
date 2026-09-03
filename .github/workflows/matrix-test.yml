@@ -3,11 +3,12 @@ name: Matrix Tests
 on: push
 
 jobs:
-  tests:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [16, 18, 20]
+
     steps:
     - uses: actions/checkout@v4
     - name: Setup Node.js ${{ matrix.node-version }}
