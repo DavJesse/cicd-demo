@@ -5,15 +5,41 @@ on: push
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    # The 'strategy' block defines variables and settings that tell GitHub Actions
+    # how to run this job multiple times in parallel.
     strategy:
+      # The 'matrix' lets you define arrays of variables.
+      # GitHub Actions will automatically spawn a separate, parallel job for 
+      # EVERY combination of variables defined in this matrix.
       matrix:
         node-version: [18, 20, 22]
 
     steps:
     - uses: actions/checkout@v4
+    
+    # The `${{ matrix.node-version }}` syntax dynamically injects the current matrix value.
+    # For example, in the Node 18 job, the step name becomes "Setup Node.js 18".
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
+        # We pass the current matrix value to the setup-node action so it knows exactly which version to install.
         node-version: ${{ matrix.node-version }}
+        
     - run: npm install
     - run: npm test
+
+# ==========================================
+# Common Use Cases for Matrix Strategies
+# ==========================================
+# 1. Multi-Version Compatibility Testing: 
+#    Ensuring your library, package, or application works flawlessly across multiple language versions (e.g., Node.js 18, 20, 22 or Python 3.9, 3.10, 3.11).
+#
+# 2. Cross-Platform / Multi-OS Testing: 
+#    Verifying that your software builds and runs correctly on different operating systems by defining an 'os' array (e.g., `os: [ubuntu-latest, windows-latest, macos-latest]`).
+#
+# 3. Multi-Browser UI Testing: 
+#    Running UI automation tests (like Cypress or Playwright) concurrently across different browsers (e.g., `browser: [chrome, firefox, webkit]`).
+#
+# 4. Multi-Dimensional Matrices: 
+#    You can define multiple arrays in the matrix (e.g., OSs *and* Node versions). GitHub will automatically create a job for EVERY possible combination (e.g., Ubuntu+Node18, Ubuntu+Node20, Windows+Node18, etc.), providing massive parallel test coverage.

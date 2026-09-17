@@ -2,20 +2,43 @@ name: Sequential Jobs
 
 on: push
 
+# By default, GitHub Actions runs all jobs defined here in parallel (at the exact same time).
+# We use the 'needs' keyword to create dependencies and force them to run sequentially.
 jobs:
   build:
     runs-on: ubuntu-latest
+    # This job has no 'needs' dependency, so it starts immediately.
     steps:
     - run: echo "Building..."
 
   test:
     runs-on: ubuntu-latest
+    # The 'needs' keyword tells GitHub that this job MUST wait for the 'build' job 
+    # to finish successfully before it is allowed to start.
     needs: build
     steps:
     - run: echo "Testing..."
 
   deploy:
     runs-on: ubuntu-latest
+    # You can pass an array to 'needs'. 
+    # This job waits for BOTH 'build' and 'test' to finish successfully before it starts.
+    # If either 'build' or 'test' fails, this 'deploy' job will be automatically skipped.
     needs: [build, test]
     steps:
     - run: echo "Deploying..."
+
+# ==========================================
+# Common Use Cases for Sequential Jobs
+# ==========================================
+# 1. Standard CI/CD Pipelines: 
+#    The classic Build -> Test -> Deploy pipeline. You don't want to deploy if tests fail, and you can't test if the build fails.
+#
+# 2. Artifact Passing: 
+#    Job A builds your application and uploads the compiled binary as an artifact. Job B "needs" Job A, downloads that artifact, and runs integration tests on it.
+#
+# 3. Infrastructure Setup & Teardown: 
+#    Job A provisions cloud infrastructure (like a test database). Job B "needs" Job A and runs tests against it. Job C "needs" Job B to tear down the infrastructure afterward.
+#
+# 4. Fan-out / Fan-in (Matrix to Finalizer): 
+#    Job A builds a base image. Jobs B, C, and D all "need" Job A and run different test suites in parallel (Fan-out). Job E "needs" [B, C, D] and creates a final release *only* if all parallel test suites passed (Fan-in).
