@@ -1,25 +1,48 @@
 name: Run Tests
 
+# The 'on' block defines exactly WHEN this workflow is allowed to run.
 on:
+    # Trigger on any push (direct commits or merges) targeting the 'main' branch specifically.
     push:
         branches: [ main ]
+    # Trigger when a Pull Request is opened, synchronized (updated), or reopened against the 'main' branch.
     pull_request:
         branches: [ main ]
 
 jobs:
     test:
+        # Specifies the operating system for the GitHub Actions virtual machine.
         runs-on: ubuntu-latest
 
         steps:
+        # 'uses' calls pre-built, reusable actions. 'checkout' downloads your repository's code into the virtual machine.
         - uses: actions/checkout@v4
 
+        # Prepares the environment by installing Node.js so we have access to 'npm'.
         - name: Setup Node.js
           uses: actions/setup-node@v4
           with:
             node-version: '18'
 
+        # Runs standard shell commands just like you would in your own terminal.
         - name: Install dependencies
           run: npm install
 
+        # Runs your test suite. If this command fails (returns a non-zero exit code), the whole job will be marked as Failed.
         - name: Run tests
           run: npm test
+
+# ==========================================
+# Common Use Cases for Workflow Triggers
+# ==========================================
+# 1. Branch Protections (Status Checks): 
+#    By triggering on `pull_request: branches: [ main ]`, you can configure GitHub Repository Settings to require this exact test workflow to pass before anyone is allowed to click "Merge".
+#
+# 2. Scheduled Runs (Cron): 
+#    Adding `schedule: - cron: '0 0 * * *'` alongside push/pull_request allows you to run this test suite every midnight automatically to catch issues like dependency rot.
+#
+# 3. Manual Execution: 
+#    Adding the `workflow_dispatch:` trigger gives you a "Run workflow" button in the GitHub UI so you can manually trigger tests without pushing any code.
+#
+# 4. Path Filtering (Saving CI Minutes): 
+#    You can add `paths-ignore: ['**/*.md', 'docs/**']` under the push trigger so that fixing a typo in your README doesn't waste time/money running the whole test suite.

@@ -2,26 +2,51 @@ name: Environment Variables
 
 on: push
 
+# WORKFLOW LEVEL: Variables defined here are globally available to EVERY job and EVERY step in this file.
 env:
   GLOBAL_VAR: "Available to all jobs"
 
 jobs:
   demo:
     runs-on: ubuntu-latest
+    
+    # JOB LEVEL: Variables defined here are available to ALL steps, but ONLY within this specific 'demo' job.
     env:
       JOB_VAR: "Available to all steps in this job"
 
     steps:
     - name: Use variables
+      # The '|' character allows us to run a multi-line script.
+      # We access these custom environment variables using standard bash syntax (e.g., $GLOBAL_VAR) 
+      # because they are injected directly into the Ubuntu runner's environment.
       run: |
         echo "Global: $GLOBAL_VAR"
         echo "Job: $JOB_VAR"
-        echo "Step-specific variable"
+        echo "Step: $STEP_VAR"
+      
+      # STEP LEVEL: Variables defined here are available ONLY while this single step is executing.
       env:
         STEP_VAR: "Only in this step"
 
     - name: Github context
+      # These are NOT custom environment variables; they come from the built-in 'GitHub Context'.
+      # The `${{ ... }}` syntax tells GitHub to evaluate and substitute these values BEFORE the script runs.
       run: |
         echo "Repository: ${{ github.repository  }}"
         echo "Branch: ${{ github.ref }}"
         echo "Commit SHA: ${{ github.sha }}"
+
+# ==========================================
+# Common Use Cases for Variables and Contexts
+# ==========================================
+# 1. Reusable Configurations: 
+#    Defining constants like `NODE_ENV: production` or `AWS_REGION: us-east-1` at the Workflow level so you don't have to repeat them in every step.
+#
+# 2. Secrets Management: 
+#    Securely passing sensitive data into a step using context injection, such as `API_KEY: ${{ secrets.MY_API_KEY }}` at the Job or Step level.
+#
+# 3. Dynamic Artifact Tagging (Contexts): 
+#    Using `${{ github.sha }}` to uniquely tag a Docker image with the specific commit hash, ensuring traceability.
+#
+# 4. Step Isolation: 
+#    Using Step-level variables to ensure a temporary file path or token doesn't accidentally get reused or accessed by subsequent steps in the same job.

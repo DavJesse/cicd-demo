@@ -7,16 +7,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Always runs
+      # This step has no 'if' condition, so it will execute every time this job runs.
       run: echo "This always runs"
 
     - name: Only on main branch
+      # The 'if' keyword evaluates an expression. Here it checks if the branch
+      # that triggered the workflow is exactly the 'main' branch.
       if: github.ref == 'refs/heads/main'
       run: echo "Deploying to production"
 
     - name: Only on tags
+      # Uses the 'startsWith' function to check if the git reference is a tag (e.g., v1.0.0)
+      # rather than a standard branch push.
       if: startsWith(github.ref, 'refs/tag/')
       run: echo "Creating release"
 
     - name: Only on PR
+      # Checks if the event that triggered this workflow was a Pull Request.
+      # Note: For this to work, 'pull_request' must be added to the 'on:' triggers at the top of the file!
       if: github.event_name == 'pull_request'
       run: echo "Running PR checks"
+
+# ==========================================
+# Common Cases for Conditional Workflows
+# ==========================================
+# 1. Environment-Specific Deployments: 
+#    Deploy to 'production' if the branch is 'main', but deploy to 'staging' if the branch is 'develop'.
+#
+# 2. Skipping Heavy Tests: 
+#    Run time-consuming End-to-End tests only on Pull Requests, while running fast Unit tests on every single push.
+#
+# 3. Release Management: 
+#    Automatically build and publish a package (like an npm package or Docker image) only when a new Git tag (e.g., 'v2.0') is created.
+#
+# 4. Handling Failures: 
+#    Use `if: failure()` to send a Slack notification or create a Jira issue *only* if a previous step in the pipeline failed.
+#
+# 5. Path Filtering:
+#    Skip the backend testing job completely if the only files modified in the commit were frontend CSS or markdown docs.
